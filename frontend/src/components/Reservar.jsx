@@ -5,7 +5,7 @@ export default function Reservar() {
   const [destinos, setDestinos] = useState([]);
   const [busqueda, setBusqueda] = useState({ destinoId: '', fecha: '', personas: 2 });
   const [resultado, setResultado] = useState(null); // RF-01 + RF-02
-  const [cliente, setCliente] = useState({ nombreCliente: '', correoCliente: '', numeroTarjeta: '' });
+  const [cliente, setCliente] = useState({ nombreCliente: '', correoCliente: '', telefonoCliente: '', numeroTarjeta: '' });
   const [confirmada, setConfirmada] = useState(null); // RF-03
   const [error, setError] = useState('');
   const [cargando, setCargando] = useState(false);
@@ -44,8 +44,8 @@ export default function Reservar() {
         <p className="codigo" aria-label="Código de confirmación">{confirmada.codigo}</p>
         <p>Guarde este código y su correo: los necesitará para consultar, cambiar la fecha o cancelar.</p>
         <Detalle r={confirmada} />
-        {!ok && <p className="alerta">El gateway simulado rechazó el pago. La reserva queda pendiente y la agencia podrá revisarla.</p>}
-        <button onClick={() => { setConfirmada(null); setCliente({ nombreCliente: '', correoCliente: '', numeroTarjeta: '' }); }}>Hacer otra reserva</button>
+        {!ok && <p className="alerta">El gateway simulado rechazó el pago. La reserva queda pendiente, sigue ocupando su cupo y queda sujeta a revisión de la agencia.</p>}
+        <button onClick={() => { setConfirmada(null); setCliente({ nombreCliente: '', correoCliente: '', telefonoCliente: '', numeroTarjeta: '' }); }}>Hacer otra reserva</button>
       </section>
     );
   }
@@ -94,6 +94,9 @@ export default function Reservar() {
                 <label>Correo electrónico
                   <input type="email" value={cliente.correoCliente} onChange={(e) => setCliente({ ...cliente, correoCliente: e.target.value })} required />
                 </label>
+                <label>Teléfono
+                  <input type="tel" placeholder="8888-1234" value={cliente.telefonoCliente} onChange={(e) => setCliente({ ...cliente, telefonoCliente: e.target.value })} required />
+                </label>
                 <label>Número de tarjeta (simulado)
                   <input inputMode="numeric" placeholder="4242 4242 4242 4242" value={cliente.numeroTarjeta} onChange={(e) => setCliente({ ...cliente, numeroTarjeta: e.target.value })} required />
                 </label>
@@ -117,7 +120,7 @@ export function Detalle({ r }) {
         <tr><td>Destino</td><td>{r.destino}</td></tr>
         <tr><td>Fecha del viaje</td><td>{r.fechaViaje}</td></tr>
         <tr><td>Personas</td><td>{r.personas}</td></tr>
-        <tr><td>Cliente</td><td>{r.nombreCliente} ({r.correoCliente})</td></tr>
+        <tr><td>Cliente</td><td>{r.nombreCliente} ({r.correoCliente}{r.telefonoCliente ? ` · ${r.telefonoCliente}` : ''})</td></tr>
         <tr><td>Total (IVA incluido)</td><td>{dinero(r.total)}</td></tr>
         <tr><td>Estado de la reserva</td><td><span className={`etiqueta ${r.estadoReserva}`}>{r.estadoReserva}</span></td></tr>
         <tr><td>Estado del pago</td><td><span className={`etiqueta ${r.estadoPago}`}>{r.estadoPago}</span> (tarjeta ****{r.tarjetaUltimos4})</td></tr>

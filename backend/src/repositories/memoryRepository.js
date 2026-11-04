@@ -95,6 +95,17 @@ class MemoryRepository {
     return clonar(r);
   }
 
+  /** Reactiva (Aprobada) una reserva cancelada verificando RN-01 de forma atómica. */
+  async reactivarReservaAtomica(id) {
+    const r = this.reservas.find((x) => x.id === id);
+    if (!r) throw noEncontrado('Reserva no encontrada');
+    const destino = this.destinos.find((d) => d.id === r.destinoId);
+    const ocupadas = this._ocupadas(r.destinoId, r.fechaViaje, id);
+    validarCupo(destino.capacidadDiaria, ocupadas, r.personas);
+    r.estadoReserva = 'Aprobada';
+    return clonar(r);
+  }
+
   async getReserva(id) {
     return clonar(this.reservas.find((r) => r.id === id)) || null;
   }

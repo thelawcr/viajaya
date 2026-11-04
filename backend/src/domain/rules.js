@@ -47,7 +47,12 @@ function cupoDisponible(capacidadDiaria, personasReservadas) {
  * supera la capacidad máxima diaria del destino.
  */
 function validarCupo(capacidadDiaria, personasReservadas, personasSolicitadas) {
-  if (personasReservadas + personasSolicitadas > capacidadDiaria) throw cupoExcedido();
+  if (personasReservadas + personasSolicitadas > capacidadDiaria) {
+    const libres = Math.max(capacidadDiaria - personasReservadas, 0);
+    throw cupoExcedido(
+      `No hay cupo suficiente para esa fecha: quedan ${libres} lugar${libres === 1 ? '' : 'es'} libre${libres === 1 ? '' : 's'}`
+    );
+  }
   return true;
 }
 

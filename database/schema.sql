@@ -26,6 +26,7 @@ create table if not exists public.reservas (
   personas        integer not null check (personas > 0),
   nombre_cliente  text not null,
   correo_cliente  text not null,
+  telefono_cliente text not null default '',                              -- CU-02: dato de contacto
   monto_subtotal  numeric(12,2) not null check (monto_subtotal >= 0),
   monto_iva       numeric(12,2) not null check (monto_iva >= 0),         -- RN-03 (13 %)
   monto_total     numeric(12,2) not null check (monto_total >= 0),
@@ -54,7 +55,7 @@ create trigger reservas_updated_at before update on public.reservas
 -- ---------------------------------------------------------------------
 create or replace function public.crear_reserva_atomica(
   p_destino uuid, p_fecha date, p_personas integer, p_codigo text,
-  p_nombre text, p_correo text, p_subtotal numeric, p_iva numeric,
+  p_nombre text, p_correo text, p_telefono text, p_subtotal numeric, p_iva numeric,
   p_total numeric, p_estado_pago text, p_ultimos4 text
 ) returns public.reservas
 language plpgsql security definer set search_path = public as $$
@@ -74,10 +75,10 @@ begin
   if v_ocup + p_personas > v_cap then raise exception 'CUPO_EXCEDIDO'; end if;
 
   insert into public.reservas
-    (codigo, destino_id, fecha_viaje, personas, nombre_cliente, correo_cliente,
+    (codigo, destino_id, fecha_viaje, personas, nombre_cliente, correo_cliente, telefono_cliente,
      monto_subtotal, monto_iva, monto_total, estado_pago, tarjeta_ultimos4)
   values
-    (p_codigo, p_destino, p_fecha, p_personas, p_nombre, lower(p_correo),
+    (p_codigo, p_destino, p_fecha, p_personas, p_nombre, lower(p_correo), p_telefono,
      p_subtotal, p_iva, p_total, p_estado_pago, p_ultimos4)
   returning * into v_row;
   return v_row;
@@ -107,11 +108,38 @@ begin
   return v_res;
 end $$;
 
+-- CU-05: reactivar (aprobar) una reserva cancelada verificando RN-01 con bloqueo del destino
+create or replace function public.reactivar_reserva_atomica(p_reserva uuid)
+returns public.reservas
+language plpgsql security definer set search_path = public as $$
+declare
+  v_res  public.reservas;
+  v_cap  integer;
+  v_ocup integer;
+begin
+  select * into v_res from public.reservas where id = p_reserva for update;
+  if not found then raise exception 'RESERVA_NO_ENCONTRADA'; end if;
+
+  select capacidad_diaria into v_cap from public.destinos where id = v_res.destino_id for update;
+
+  select coalesce(sum(personas), 0) into v_ocup
+    from public.reservas
+   where destino_id = v_res.destino_id and fecha_viaje = v_res.fecha_viaje
+     and estado_reserva <> 'Cancelada' and id <> p_reserva;
+
+  if v_ocup + v_res.personas > v_cap then raise exception 'CUPO_EXCEDIDO'; end if;
+
+  update public.reservas set estado_reserva = 'Aprobada' where id = p_reserva returning * into v_res;
+  return v_res;
+end $$;
+
 -- Solo el backend (service_role) puede ejecutar las funciones críticas
-revoke all on function public.crear_reserva_atomica(uuid,date,integer,text,text,text,numeric,numeric,numeric,text,text) from public, anon, authenticated;
+revoke all on function public.crear_reserva_atomica(uuid,date,integer,text,text,text,text,numeric,numeric,numeric,text,text) from public, anon, authenticated;
 revoke all on function public.mover_reserva_atomica(uuid,date) from public, anon, authenticated;
-grant execute on function public.crear_reserva_atomica(uuid,date,integer,text,text,text,numeric,numeric,numeric,text,text) to service_role;
+grant execute on function public.crear_reserva_atomica(uuid,date,integer,text,text,text,text,numeric,numeric,numeric,text,text) to service_role;
 grant execute on function public.mover_reserva_atomica(uuid,date) to service_role;
+revoke all on function public.reactivar_reserva_atomica(uuid) from public, anon, authenticated;
+grant execute on function public.reactivar_reserva_atomica(uuid) to service_role;
 
 -- ---------------------------------------------------------------------
 -- Row Level Security

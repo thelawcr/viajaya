@@ -17,6 +17,16 @@ function correo(valor) {
   return c;
 }
 
+/** Teléfono: 7 a 15 dígitos; se admiten +, espacios, guiones y paréntesis. */
+function telefono(valor) {
+  const t = String(valor ?? '').trim();
+  const digitos = t.replace(/\D/g, '');
+  if (!/^[+\d\s().-]+$/.test(t) || digitos.length < 7 || digitos.length > 15) {
+    throw validacion('El teléfono debe tener entre 7 y 15 dígitos');
+  }
+  return t;
+}
+
 function entero(valor, campo, { min = 1, max = Number.MAX_SAFE_INTEGER } = {}) {
   const n = typeof valor === 'string' && valor.trim() !== '' ? Number(valor) : valor;
   if (!Number.isInteger(n) || n < min || n > max) {
@@ -37,4 +47,4 @@ function codigoReserva(valor) {
   return texto(valor, 'código de reserva', { max: 30 }).toUpperCase();
 }
 
-module.exports = { texto, correo, entero, monto, codigoReserva, MAX_PERSONAS_POR_RESERVA };
+module.exports = { texto, correo, telefono, entero, monto, codigoReserva, MAX_PERSONAS_POR_RESERVA };

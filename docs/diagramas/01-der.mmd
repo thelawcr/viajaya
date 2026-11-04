@@ -1,0 +1,44 @@
+erDiagram
+    direction LR
+    DESTINOS ||--o{ RESERVAS : "tiene"
+    DESTINOS ||..o{ AUDITORIA : "traza (sin FK)"
+    RESERVAS ||..o{ AUDITORIA : "traza (sin FK)"
+
+    DESTINOS {
+        uuid id PK
+        text nombre
+        text descripcion
+        numeric precio_base "RF-07, mayor que 0"
+        int capacidad_diaria "RF-07 y RN-01, mayor que 0"
+        boolean activo "baja lógica"
+        timestamptz created_at
+    }
+
+    RESERVAS {
+        uuid id PK
+        text codigo UK "VY-XXXXXXXX (RF-03)"
+        uuid destino_id FK
+        date fecha_viaje
+        int personas "mayor que 0"
+        text nombre_cliente
+        text correo_cliente
+        text telefono_cliente "CU-02"
+        numeric monto_subtotal
+        numeric monto_iva "13 por ciento (RN-03)"
+        numeric monto_total
+        text estado_reserva "Pendiente, Aprobada, Cancelada"
+        text estado_pago "Pendiente, Aprobado, Rechazado"
+        char tarjeta_ultimos4 "nunca el número completo"
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    AUDITORIA {
+        uuid id PK
+        timestamptz created_at
+        text actor "correo admin o cliente:correo"
+        text accion "RESERVA_APROBADA, PAGO_MODIFICADO..."
+        text entidad "reserva o destino"
+        text entidad_id "sin FK"
+        jsonb detalle
+    }

@@ -34,7 +34,7 @@ describe('API pública (RF-01 a RF-06 por HTTP)', () => {
     expect(cot.body).toMatchObject({ subtotal: 200, iva: 26, total: 226 });
 
     const crea = await request(app).post('/api/reservas').send({
-      destinoId: DESTINO_ID, fecha: '2026-11-20', personas: 2, nombreCliente: 'Ana', correoCliente: 'ana@correo.com', numeroTarjeta: '4242424242424242',
+      destinoId: DESTINO_ID, fecha: '2026-11-20', personas: 2, nombreCliente: 'Ana', correoCliente: 'ana@correo.com', telefonoCliente: '8888-1234', numeroTarjeta: '4242424242424242',
     });
     expect(crea.status).toBe(201);
     expect(crea.body.estadoPago).toBe('Aprobado');
@@ -54,7 +54,7 @@ describe('API pública (RF-01 a RF-06 por HTTP)', () => {
   test('responde con códigos HTTP y mensajes de error coherentes', async () => {
     const { app } = crearServidor();
     const sinCupo = await request(app).post('/api/reservas').send({
-      destinoId: DESTINO_ID, fecha: '2026-11-20', personas: 11, nombreCliente: 'Ana', correoCliente: 'ana@correo.com', numeroTarjeta: '4242424242424242',
+      destinoId: DESTINO_ID, fecha: '2026-11-20', personas: 11, nombreCliente: 'Ana', correoCliente: 'ana@correo.com', telefonoCliente: '8888-1234', numeroTarjeta: '4242424242424242',
     });
     expect(sinCupo.status).toBe(409);
     expect(sinCupo.body.error.codigo).toBe('CUPO_EXCEDIDO');
@@ -144,8 +144,10 @@ describe('RF-08 Gestión de reservas', () => {
     const canc = await request(app).patch(`/api/admin/reservas/${b.id}/cancelar`).set(h);
     expect(canc.body.estadoReserva).toBe('Cancelada');
 
-    const noAprobar = await request(app).patch(`/api/admin/reservas/${b.id}/aprobar`).set(h);
-    expect(noAprobar.status).toBe(400);
+    // Aprobar una reserva cancelada la reactiva (CU-05) comprobando antes el cupo (RN-01)
+    const reactivada = await request(app).patch(`/api/admin/reservas/${b.id}/aprobar`).set(h);
+    expect(reactivada.status).toBe(200);
+    expect(reactivada.body.estadoReserva).toBe('Aprobada');
 
     const del = await request(app).delete(`/api/admin/reservas/${a.id}`).set(h);
     expect(del.body.eliminada).toBe(true);

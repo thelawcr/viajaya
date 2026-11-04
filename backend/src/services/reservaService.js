@@ -27,6 +27,7 @@ function vistaReserva(r, destinoNombre) {
     personas: r.personas,
     nombreCliente: r.nombreCliente,
     correoCliente: r.correoCliente,
+    telefonoCliente: r.telefonoCliente,
     subtotal: r.montoSubtotal,
     iva: r.montoIva,
     total: r.montoTotal,
@@ -100,6 +101,7 @@ function crearReservaService({ repo, now = () => new Date(), generarCodigo = gen
       const personas = v.entero(datos.personas, 'personas', { max: v.MAX_PERSONAS_POR_RESERVA });
       const nombreCliente = v.texto(datos.nombreCliente, 'nombre');
       const correoCliente = v.correo(datos.correoCliente);
+      const telefonoCliente = v.telefono(datos.telefonoCliente);
       fechaFutura(datos.fecha);
 
       const cotizacion = rules.calcularCotizacion(destino.precioBase, personas);
@@ -119,6 +121,7 @@ function crearReservaService({ repo, now = () => new Date(), generarCodigo = gen
         personas,
         nombreCliente,
         correoCliente,
+        telefonoCliente,
         montoSubtotal: cotizacion.subtotal,
         montoIva: cotizacion.iva,
         montoTotal: cotizacion.total,

@@ -13,7 +13,7 @@ const v = require('../domain/validators');
 const { validacion, noEncontrado } = require('../domain/errors');
 const { crearAuditor } = require('./auditoria');
 
-function crearAdminService({ repo }) {
+function crearAdminService({ repo, now = () => new Date() }) {
   const auditar = crearAuditor(repo);
 
   async function reservaOError(id) {
@@ -99,13 +99,26 @@ function crearAdminService({ repo }) {
       return repo.listReservas();
     },
 
+    /**
+     * Aprueba una reserva. Si estaba Cancelada se reactiva (CU-05): primero se
+     * comprueba el cupo (RN-01) de forma atómica y la fecha no debe haber pasado.
+     */
     async aprobarReserva(id, actor) {
       const r = await reservaOError(id);
-      if (r.estadoReserva === 'Cancelada') throw validacion('No se puede aprobar una reserva cancelada');
-      const nueva = await repo.updateReserva(r.id, { estadoReserva: 'Aprobada' });
+      let nueva;
+      let accion = 'RESERVA_APROBADA';
+      if (r.estadoReserva === 'Cancelada') {
+        if (r.fechaViaje < rules.hoyISO(now())) {
+          throw validacion('No se puede reactivar una reserva cuya fecha de viaje ya pasó');
+        }
+        nueva = await repo.reactivarReservaAtomica(r.id); // RN-01
+        accion = 'RESERVA_REACTIVADA';
+      } else {
+        nueva = await repo.updateReserva(r.id, { estadoReserva: 'Aprobada' });
+      }
       await auditar({
         actor,
-        accion: 'RESERVA_APROBADA',
+        accion,
         entidad: 'reserva',
         entidadId: r.id,
         detalle: { ...resumenReserva(r), estadoAnterior: r.estadoReserva },

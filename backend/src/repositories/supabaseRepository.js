@@ -28,6 +28,7 @@ const aReserva = (r) =>
     personas: r.personas,
     nombreCliente: r.nombre_cliente,
     correoCliente: r.correo_cliente,
+    telefonoCliente: r.telefono_cliente || '',
     montoSubtotal: Number(r.monto_subtotal),
     montoIva: Number(r.monto_iva),
     montoTotal: Number(r.monto_total),
@@ -119,6 +120,7 @@ class SupabaseRepository {
         p_codigo: d.codigo,
         p_nombre: d.nombreCliente,
         p_correo: d.correoCliente,
+        p_telefono: d.telefonoCliente,
         p_subtotal: d.montoSubtotal,
         p_iva: d.montoIva,
         p_total: d.montoTotal,
@@ -133,6 +135,11 @@ class SupabaseRepository {
     const data = await this._ok(
       await this.db.rpc('mover_reserva_atomica', { p_reserva: id, p_nueva_fecha: nuevaFecha })
     );
+    return aReserva(data);
+  }
+
+  async reactivarReservaAtomica(id) {
+    const data = await this._ok(await this.db.rpc('reactivar_reserva_atomica', { p_reserva: id }));
     return aReserva(data);
   }
 

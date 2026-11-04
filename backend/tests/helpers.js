@@ -21,7 +21,7 @@ function crearEntorno({ capacidad = 10, precio = 100, ahora = AHORA } = {}) {
     now: () => ahora,
     generarCodigo: () => `VY-TEST${String(++n).padStart(4, '0')}`,
   });
-  const admin = crearAdminService({ repo });
+  const admin = crearAdminService({ repo, now: () => ahora });
   return { repo, reservas, admin };
 }
 
@@ -32,6 +32,7 @@ const datosReserva = (extra = {}) => ({
   personas: 2,
   nombreCliente: 'Cliente de Prueba',
   correoCliente: 'cliente@correo.com',
+  telefonoCliente: '+506 8888-1234',
   numeroTarjeta: '4111111111111112', // termina en par => Aprobado
   ...extra,
 });

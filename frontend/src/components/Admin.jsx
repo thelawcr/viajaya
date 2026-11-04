@@ -78,7 +78,7 @@ function Reservas({ token, onExpira }) {
             {datos.map((r) => (
               <tr key={r.id}>
                 <td>{r.codigo}</td><td>{r.destinoNombre}</td><td>{r.fechaViaje}</td><td>{r.personas}</td>
-                <td>{r.nombreCliente}<br /><small>{r.correoCliente}</small></td><td>{dinero(r.montoTotal)}</td>
+                <td>{r.nombreCliente}<br /><small>{r.correoCliente}{r.telefonoCliente ? ` · ${r.telefonoCliente}` : ''}</small></td><td>{dinero(r.montoTotal)}</td>
                 <td><span className={`etiqueta ${r.estadoReserva}`}>{r.estadoReserva}</span></td>
                 <td>
                   <select aria-label={`Estado de pago de ${r.codigo}`} value={r.estadoPago}
@@ -87,9 +87,9 @@ function Reservas({ token, onExpira }) {
                   </select>
                 </td>
                 <td className="acciones">
-                  <button disabled={r.estadoReserva !== 'Pendiente'} onClick={() => accion(() => api.admin.aprobar(token, r.id))}>Aprobar</button>
+                  <button disabled={r.estadoReserva === 'Aprobada'} onClick={() => accion(() => api.admin.aprobar(token, r.id))}>{r.estadoReserva === 'Cancelada' ? 'Reactivar' : 'Aprobar'}</button>
                   <button className="secundario" disabled={r.estadoReserva === 'Cancelada'} onClick={() => accion(() => api.admin.cancelar(token, r.id), '¿Cancelar esta reserva?')}>Cancelar</button>
-                  <button className="peligro" onClick={() => accion(() => api.admin.eliminar(token, r.id), '¿Eliminar definitivamente esta reserva?')}>Eliminar</button>
+                  <button className="peligro" onClick={() => accion(() => api.admin.eliminar(token, r.id), '¿Eliminar definitivamente esta reserva? Para conservar la trazabilidad se recomienda usar Cancelar. La acción quedará registrada en la auditoría.')}>Eliminar</button>
                 </td>
               </tr>
             ))}
@@ -168,6 +168,7 @@ const ETIQUETAS = {
   RESERVA_CANCELADA_CLIENTE: 'Cancelada por el cliente',
   RESERVA_CANCELADA_ADMIN: 'Cancelada por la agencia',
   RESERVA_APROBADA: 'Reserva aprobada',
+  RESERVA_REACTIVADA: 'Reserva reactivada',
   RESERVA_ELIMINADA: 'Reserva eliminada',
   PAGO_MODIFICADO: 'Estado de pago modificado',
   DESTINO_CREADO: 'Destino creado',
