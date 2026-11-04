@@ -175,6 +175,34 @@ class SupabaseRepository {
     const data = await this._ok(await this.db.from('reservas').delete().eq('id', id).select('id'));
     if (!data.length) throw noEncontrado('Reserva no encontrada');
   }
+
+  // ---------- Auditoría ----------
+  async registrarAuditoria({ actor, accion, entidad, entidadId = null, detalle = {} }) {
+    await this._ok(
+      await this.db.from('auditoria').insert({
+        actor,
+        accion,
+        entidad,
+        entidad_id: entidadId,
+        detalle,
+      })
+    );
+  }
+
+  async listAuditoria({ limite = 200 } = {}) {
+    const data = await this._ok(
+      await this.db.from('auditoria').select('*').order('created_at', { ascending: false }).limit(limite)
+    );
+    return data.map((r) => ({
+      id: r.id,
+      createdAt: r.created_at,
+      actor: r.actor,
+      accion: r.accion,
+      entidad: r.entidad,
+      entidadId: r.entidad_id,
+      detalle: r.detalle || {},
+    }));
+  }
 }
 
 module.exports = { SupabaseRepository };

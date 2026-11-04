@@ -7,6 +7,7 @@ const { randomBytes } = require('crypto');
 const rules = require('../domain/rules');
 const v = require('../domain/validators');
 const { validacion, noEncontrado } = require('../domain/errors');
+const { crearAuditor } = require('./auditoria');
 
 const ALFABETO = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // sin caracteres ambiguos (0/O, 1/I)
 
@@ -36,6 +37,7 @@ function vistaReserva(r, destinoNombre) {
 }
 
 function crearReservaService({ repo, now = () => new Date(), generarCodigo = generarCodigoDefault }) {
+  const auditar = crearAuditor(repo);
   async function destinoDisponible(destinoId) {
     const destino = await repo.getDestino(String(destinoId ?? ''));
     if (!destino || !destino.activo) throw noEncontrado('El destino no existe o no está disponible');
@@ -124,6 +126,20 @@ function crearReservaService({ repo, now = () => new Date(), generarCodigo = gen
         estadoPago: pago.estadoPago,
         tarjetaUltimos4: pago.ultimos4,
       });
+      await auditar({
+        actor: `cliente:${correoCliente}`,
+        accion: 'RESERVA_CREADA',
+        entidad: 'reserva',
+        entidadId: reserva.id,
+        detalle: {
+          codigo: reserva.codigo,
+          destino: destino.nombre,
+          fechaViaje: reserva.fechaViaje,
+          personas,
+          total: reserva.montoTotal,
+          estadoPago: reserva.estadoPago,
+        },
+      });
       return vistaReserva(reserva, destino.nombre);
     },
 
@@ -146,6 +162,13 @@ function crearReservaService({ repo, now = () => new Date(), generarCodigo = gen
       rules.validarCupo(destino.capacidadDiaria, ocupadas, reserva.personas); // RN-01
 
       const actualizada = await repo.moverReservaAtomica(reserva.id, nuevaFecha);
+      await auditar({
+        actor: `cliente:${reserva.correoCliente}`,
+        accion: 'RESERVA_FECHA_CAMBIADA',
+        entidad: 'reserva',
+        entidadId: reserva.id,
+        detalle: { codigo: reserva.codigo, de: reserva.fechaViaje, a: nuevaFecha },
+      });
       return vistaReserva(actualizada, destino.nombre);
     },
 
@@ -154,6 +177,13 @@ function crearReservaService({ repo, now = () => new Date(), generarCodigo = gen
       const reserva = await cargarReservaActiva(codigo, correo);
       rules.validarVentana(reserva.fechaViaje, now()); // RN-02
       const actualizada = await repo.updateReserva(reserva.id, { estadoReserva: 'Cancelada' });
+      await auditar({
+        actor: `cliente:${reserva.correoCliente}`,
+        accion: 'RESERVA_CANCELADA_CLIENTE',
+        entidad: 'reserva',
+        entidadId: reserva.id,
+        detalle: { codigo: reserva.codigo, fechaViaje: reserva.fechaViaje, personas: reserva.personas },
+      });
       const destino = await repo.getDestino(reserva.destinoId);
       return vistaReserva(actualizada, destino?.nombre);
     },

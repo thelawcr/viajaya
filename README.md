@@ -40,7 +40,8 @@ Administrador de demostración: `admin@viajaya.test` / `Admin123!` (configurable
 
 1. Cree un proyecto en https://supabase.com.
 2. En **SQL Editor** ejecute `database/schema.sql` y, opcionalmente, `database/seed.sql`.
-3. En **Authentication > Users** cree el usuario administrador y ejecute el `update auth.users ...` indicado al final de `schema.sql` para asignarle el rol `admin`.
+3. Si ya había ejecutado una versión anterior de `schema.sql`, ejecute también `database/migracion_auditoria.sql` (crea la tabla de auditoría).
+4. En **Authentication > Users** cree el usuario administrador y ejecute el `update auth.users ...` indicado al final de `schema.sql` para asignarle el rol `admin`.
 4. Complete `backend/.env`: `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `SUPABASE_ANON_KEY` y un `JWT_SECRET` largo y aleatorio.
 5. `npm start` en `backend/`. La clave `SUPABASE_SERVICE_KEY` **nunca** debe ir en el frontend ni en el repositorio.
 
@@ -48,7 +49,7 @@ Administrador de demostración: `admin@viajaya.test` / `Admin123!` (configurable
 
 ```bash
 cd backend
-npm test                # 56 pruebas
+npm test                # 68 pruebas
 npm run test:coverage   # con informe de cobertura
 ```
 
@@ -57,6 +58,7 @@ npm run test:coverage   # con informe de cobertura
 | RN-01 a RN-04 | `tests/reglas-negocio.test.js` | 23 |
 | RF-01 a RF-06 | `tests/requerimientos-funcionales.test.js` | 20 |
 | API HTTP, seguridad, RF-07 a RF-09 | `tests/api-admin.test.js` | 13 |
+| Auditoría (trazabilidad) | `tests/auditoria.test.js` | 12 |
 
 ## Despliegue en Render (un solo servicio)
 
@@ -74,3 +76,7 @@ La guía completa de despliegue corresponde al Entregable 4.
 - **RN-01 atómica:** la verificación de cupo se repite dentro de una función SQL que bloquea la fila del destino, evitando sobrecupos con solicitudes simultáneas.
 - **Datos de tarjeta:** nunca se almacena el número completo, solo los últimos 4 dígitos.
 - **Consulta de reservas por POST:** el correo del cliente no viaja en la URL.
+
+## Auditoría
+
+Cada acción del administrador y de los clientes (crear, aprobar, cancelar, eliminar, cambiar pago o fecha, editar destinos) se guarda en la tabla `auditoria`, que es de solo agregar. Se consulta en **Administración > Auditoría** o con `GET /api/admin/auditoria`.

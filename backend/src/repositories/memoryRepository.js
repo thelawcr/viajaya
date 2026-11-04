@@ -14,6 +14,24 @@ class MemoryRepository {
   constructor({ destinos = [], reservas = [] } = {}) {
     this.destinos = destinos.map((d) => ({ activo: true, descripcion: '', ...d, id: d.id || randomUUID() }));
     this.reservas = reservas.map((r) => ({ ...r, id: r.id || randomUUID() }));
+    this.auditoria = [];
+  }
+
+  // ---------- Auditoría (solo se agrega, nunca se modifica ni se borra) ----------
+  async registrarAuditoria({ actor, accion, entidad, entidadId = null, detalle = {} }) {
+    this.auditoria.push({
+      id: randomUUID(),
+      createdAt: new Date().toISOString(),
+      actor,
+      accion,
+      entidad,
+      entidadId,
+      detalle: clonar(detalle),
+    });
+  }
+
+  async listAuditoria({ limite = 200 } = {}) {
+    return clonar([...this.auditoria].reverse().slice(0, limite));
   }
 
   // ---------- Destinos ----------

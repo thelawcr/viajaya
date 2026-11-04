@@ -45,6 +45,7 @@ export const api = {
     aprobar: (t, id) => pedir(`/admin/reservas/${id}/aprobar`, { metodo: 'PATCH', token: t }),
     cancelar: (t, id) => pedir(`/admin/reservas/${id}/cancelar`, { metodo: 'PATCH', token: t }),
     eliminar: (t, id) => pedir(`/admin/reservas/${id}`, { metodo: 'DELETE', token: t }),
+    auditoria: (t) => pedir('/admin/auditoria', { token: t }),
     pago: (t, id, estadoPago) => pedir(`/admin/reservas/${id}/pago`, { metodo: 'PATCH', cuerpo: { estadoPago }, token: t }),
   },
 };

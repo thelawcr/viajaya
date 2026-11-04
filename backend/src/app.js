@@ -5,7 +5,10 @@ const express = require('express');
 const cors = require('cors');
 const { AppError, noAutorizado } = require('./domain/errors');
 
-
+/**
+ * Construye la aplicación Express con dependencias inyectadas
+ * ({ reservas, admin, auth }), lo que permite probarla sin base de datos.
+ */
 function crearApp({ reservas, admin, auth, corsOrigin = '*', frontendDist = null }) {
   const app = express();
   app.use(cors({ origin: corsOrigin }));
@@ -75,20 +78,25 @@ function crearApp({ reservas, admin, auth, corsOrigin = '*', frontendDist = null
 
   // RF-07
   app.get('/api/admin/destinos', ah(async (req, res) => res.json(await admin.listarDestinos())));
-  app.post('/api/admin/destinos', ah(async (req, res) => res.status(201).json(await admin.crearDestino(req.body || {}))));
-  app.put('/api/admin/destinos/:id', ah(async (req, res) => res.json(await admin.editarDestino(req.params.id, req.body || {}))));
-  app.patch('/api/admin/destinos/:id/desactivar', ah(async (req, res) => res.json(await admin.desactivarDestino(req.params.id))));
-  app.patch('/api/admin/destinos/:id/activar', ah(async (req, res) => res.json(await admin.activarDestino(req.params.id))));
+  app.post('/api/admin/destinos', ah(async (req, res) => res.status(201).json(await admin.crearDestino(req.body || {}, req.admin.sub))));
+  app.put('/api/admin/destinos/:id', ah(async (req, res) => res.json(await admin.editarDestino(req.params.id, req.body || {}, req.admin.sub))));
+  app.patch('/api/admin/destinos/:id/desactivar', ah(async (req, res) => res.json(await admin.desactivarDestino(req.params.id, req.admin.sub))));
+  app.patch('/api/admin/destinos/:id/activar', ah(async (req, res) => res.json(await admin.activarDestino(req.params.id, req.admin.sub))));
 
   // RF-08
   app.get('/api/admin/reservas', ah(async (req, res) => res.json(await admin.listarReservas())));
-  app.patch('/api/admin/reservas/:id/aprobar', ah(async (req, res) => res.json(await admin.aprobarReserva(req.params.id))));
-  app.patch('/api/admin/reservas/:id/cancelar', ah(async (req, res) => res.json(await admin.cancelarReserva(req.params.id))));
-  app.delete('/api/admin/reservas/:id', ah(async (req, res) => res.json(await admin.eliminarReserva(req.params.id))));
+  app.patch('/api/admin/reservas/:id/aprobar', ah(async (req, res) => res.json(await admin.aprobarReserva(req.params.id, req.admin.sub))));
+  app.patch('/api/admin/reservas/:id/cancelar', ah(async (req, res) => res.json(await admin.cancelarReserva(req.params.id, req.admin.sub))));
+  app.delete('/api/admin/reservas/:id', ah(async (req, res) => res.json(await admin.eliminarReserva(req.params.id, req.admin.sub))));
 
   // RF-09
   app.patch('/api/admin/reservas/:id/pago', ah(async (req, res) => {
-    res.json(await admin.cambiarEstadoPago(req.params.id, req.body?.estadoPago));
+    res.json(await admin.cambiarEstadoPago(req.params.id, req.body?.estadoPago, req.admin.sub));
+  }));
+
+  // Trazabilidad: registro de acciones (solo lectura)
+  app.get('/api/admin/auditoria', ah(async (req, res) => {
+    res.json(await admin.listarAuditoria({ limite: Number(req.query.limite) || undefined }));
   }));
 
   // ---------------- Frontend compilado (despliegue en un solo servicio) ----------------

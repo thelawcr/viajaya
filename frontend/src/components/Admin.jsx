@@ -14,10 +14,13 @@ export default function Admin() {
       <div className="fila">
         <button className={vista === 'reservas' ? 'tab activo' : 'tab'} onClick={() => setVista('reservas')}>Reservas</button>
         <button className={vista === 'destinos' ? 'tab activo' : 'tab'} onClick={() => setVista('destinos')}>Destinos</button>
+        <button className={vista === 'auditoria' ? 'tab activo' : 'tab'} onClick={() => setVista('auditoria')}>Auditoría</button>
         <span className="espacio" />
         <button className="secundario" onClick={salir}>Cerrar sesión</button>
       </div>
-      {vista === 'reservas' ? <Reservas token={token} onExpira={salir} /> : <Destinos token={token} onExpira={salir} />}
+      {vista === 'reservas' && <Reservas token={token} onExpira={salir} />}
+      {vista === 'destinos' && <Destinos token={token} onExpira={salir} />}
+      {vista === 'auditoria' && <Auditoria token={token} onExpira={salir} />}
     </>
   );
 }
@@ -156,5 +159,64 @@ function Destinos({ token, onExpira }) {
         </table>
       </section>
     </>
+  );
+}
+
+const ETIQUETAS = {
+  RESERVA_CREADA: 'Reserva creada',
+  RESERVA_FECHA_CAMBIADA: 'Fecha cambiada',
+  RESERVA_CANCELADA_CLIENTE: 'Cancelada por el cliente',
+  RESERVA_CANCELADA_ADMIN: 'Cancelada por la agencia',
+  RESERVA_APROBADA: 'Reserva aprobada',
+  RESERVA_ELIMINADA: 'Reserva eliminada',
+  PAGO_MODIFICADO: 'Estado de pago modificado',
+  DESTINO_CREADO: 'Destino creado',
+  DESTINO_EDITADO: 'Destino editado',
+  DESTINO_DESACTIVADO: 'Destino desactivado',
+  DESTINO_ACTIVADO: 'Destino activado',
+};
+
+function describir(e) {
+  const d = e.detalle || {};
+  switch (e.accion) {
+    case 'RESERVA_CREADA': return `${d.codigo} · ${d.destino} · ${d.fechaViaje} · ${d.personas} pers. · pago ${d.estadoPago}`;
+    case 'RESERVA_FECHA_CAMBIADA': return `${d.codigo} · ${d.de} → ${d.a}`;
+    case 'PAGO_MODIFICADO': return `${d.codigo} · ${d.de} → ${d.a}`;
+    case 'RESERVA_ELIMINADA': return `${d.codigo} · ${d.fechaViaje} · ${d.personas} pers. · ${d.cliente}`;
+    case 'DESTINO_EDITADO': return `${d.nombre} · ${Object.entries(d.cambios || {}).map(([k, c]) => `${k}: ${c.de} → ${c.a}`).join(', ')}`;
+    case 'DESTINO_CREADO': return `${d.nombre} · ${d.precioBase} USD · capacidad ${d.capacidadDiaria}`;
+    default: return d.codigo || d.nombre || '';
+  }
+}
+
+function Auditoria({ token, onExpira }) {
+  const cargar = useCallback(() => api.admin.auditoria(token), [token]);
+  const { datos, error, recargar } = useCarga(cargar, onExpira);
+  return (
+    <section className="tarjeta">
+      <div className="fila">
+        <h2>Registro de auditoría</h2>
+        <span className="espacio" />
+        <button className="secundario" onClick={recargar}>Actualizar</button>
+      </div>
+      <p className="nota">Muestra quién realizó cada acción y cuándo. El registro es de solo lectura.</p>
+      {error && <p className="error" role="alert">{error}</p>}
+      <div className="scroll">
+        <table className="tabla ancha">
+          <thead><tr><th>Fecha y hora</th><th>Quién</th><th>Acción</th><th>Detalle</th></tr></thead>
+          <tbody>
+            {datos.length === 0 && <tr><td colSpan="4">Aún no hay acciones registradas.</td></tr>}
+            {datos.map((e) => (
+              <tr key={e.id}>
+                <td>{new Date(e.createdAt).toLocaleString('es-CR')}</td>
+                <td>{e.actor}</td>
+                <td>{ETIQUETAS[e.accion] || e.accion}</td>
+                <td>{describir(e)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
   );
 }
