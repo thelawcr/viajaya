@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Reservar from './components/Reservar.jsx';
 import MiReserva from './components/MiReserva.jsx';
 import Admin from './components/Admin.jsx';
+import { Logo } from './imagenes.jsx';
 
 const TABS = [
   { id: 'reservar', texto: 'Reservar' },
@@ -15,7 +16,7 @@ export default function App() {
     <>
       <header className="cabecera">
         <div className="contenedor barra">
-          <h1>ViajaYa</h1>
+          <h1 className="marca"><Logo />ViajaYa</h1>
           <nav aria-label="Secciones">
             {TABS.map((t) => (
               <button key={t.id} className={tab === t.id ? 'tab activo' : 'tab'} onClick={() => setTab(t.id)}>

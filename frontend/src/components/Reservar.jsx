@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { api, dinero, hoyISO } from '../api.js';
+import { FotoDestino, urlPortada } from '../imagenes.jsx';
 
 export default function Reservar() {
   const [destinos, setDestinos] = useState([]);
@@ -9,6 +10,7 @@ export default function Reservar() {
   const [confirmada, setConfirmada] = useState(null); // RF-03
   const [error, setError] = useState('');
   const [cargando, setCargando] = useState(false);
+  const formRef = useRef(null);
 
   useEffect(() => {
     api.destinos().then((d) => {
@@ -16,6 +18,12 @@ export default function Reservar() {
       if (d[0]) setBusqueda((b) => ({ ...b, destinoId: d[0].id }));
     }).catch((e) => setError(e.message));
   }, []);
+
+  function elegir(id) {
+    setBusqueda((b) => ({ ...b, destinoId: id }));
+    setResultado(null);
+    formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
 
   async function buscar(e) {
     e.preventDefault();
@@ -39,20 +47,53 @@ export default function Reservar() {
   if (confirmada) {
     const ok = confirmada.estadoPago === 'Aprobado';
     return (
-      <section className="tarjeta">
+      <section className="tarjeta comprobante">
         <h2>{ok ? 'Reserva registrada' : 'Reserva registrada con pago rechazado'}</h2>
         <p className="codigo" aria-label="Código de confirmación">{confirmada.codigo}</p>
         <p>Guarde este código y su correo: los necesitará para consultar, cambiar la fecha o cancelar.</p>
         <Detalle r={confirmada} />
         {!ok && <p className="alerta">El gateway simulado rechazó el pago. La reserva queda pendiente, sigue ocupando su cupo y queda sujeta a revisión de la agencia.</p>}
-        <button onClick={() => { setConfirmada(null); setCliente({ nombreCliente: '', correoCliente: '', telefonoCliente: '', numeroTarjeta: '' }); }}>Hacer otra reserva</button>
+        <div className="fila no-imprimir">
+          <button onClick={() => { setConfirmada(null); setCliente({ nombreCliente: '', correoCliente: '', telefonoCliente: '', numeroTarjeta: '' }); }}>Hacer otra reserva</button>
+          <button type="button" className="secundario" onClick={() => window.print()}>Imprimir comprobante</button>
+        </div>
       </section>
     );
   }
 
   return (
     <>
-      <section className="tarjeta">
+      <section className="portada" style={{ backgroundImage: `linear-gradient(120deg, rgba(0, 70, 130, .72), rgba(8, 120, 201, .25)), url(${urlPortada})` }}>
+        <p className="portada-etiqueta">Caribe Sur · Costa Rica</p>
+        <h2>Viva el Caribe Sur a su ritmo</h2>
+        <p>Elija su excursión, vea el precio al instante y reserve en minutos. Sin llamadas ni mensajes.</p>
+        <ul className="portada-datos">
+          <li><b>{destinos.length || '—'}</b> excursiones</li>
+          <li><b>13 %</b> IVA incluido en la cotización</li>
+          <li><b>48 h</b> para cambiar o cancelar</li>
+        </ul>
+      </section>
+
+      {destinos.length > 0 && (
+        <section className="catalogo" aria-label="Excursiones disponibles">
+          {destinos.map((d) => (
+            <article key={d.id} className={d.id === busqueda.destinoId ? 'destino-tarjeta elegido' : 'destino-tarjeta'}>
+              <FotoDestino nombre={d.nombre} />
+              <div className="destino-cuerpo">
+                <h3>{d.nombre}</h3>
+                {d.descripcion && <p className="destino-desc">{d.descripcion}</p>}
+                <div className="destino-pie">
+                  <span className="precio">{dinero(d.precioBase)}<small> / persona</small></span>
+                  <button type="button" className="secundario" onClick={() => elegir(d.id)}>{d.id === busqueda.destinoId ? 'Elegida' : 'Elegir'}</button>
+                </div>
+                <small className="cupo-dia">Hasta {d.capacidadDiaria} personas por día</small>
+              </div>
+            </article>
+          ))}
+        </section>
+      )}
+
+      <section className="tarjeta" ref={formRef}>
         <h2>1. Busque su excursión</h2>
         <form onSubmit={buscar} className="rejilla">
           <label>Destino
@@ -115,6 +156,8 @@ export default function Reservar() {
 
 export function Detalle({ r }) {
   return (
+    <>
+    {r.destino && <FotoDestino nombre={r.destino} className="detalle-foto" />}
     <table className="tabla">
       <tbody>
         <tr><td>Destino</td><td>{r.destino}</td></tr>
@@ -126,5 +169,6 @@ export function Detalle({ r }) {
         <tr><td>Estado del pago</td><td><span className={`etiqueta ${r.estadoPago}`}>{r.estadoPago}</span> (tarjeta ****{r.tarjetaUltimos4})</td></tr>
       </tbody>
     </table>
+    </>
   );
 }

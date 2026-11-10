@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api, dinero } from '../api.js';
+import Resumen from './Resumen.jsx';
+import { FotoDestino } from '../imagenes.jsx';
 
 export default function Admin() {
   const [token, setToken] = useState(() => sessionStorage.getItem('vy_token') || '');
-  const [vista, setVista] = useState('reservas');
+  const [vista, setVista] = useState('resumen');
 
   function salir() { sessionStorage.removeItem('vy_token'); setToken(''); }
 
@@ -12,12 +14,14 @@ export default function Admin() {
   return (
     <>
       <div className="fila">
+        <button className={vista === 'resumen' ? 'tab activo' : 'tab'} onClick={() => setVista('resumen')}>Resumen</button>
         <button className={vista === 'reservas' ? 'tab activo' : 'tab'} onClick={() => setVista('reservas')}>Reservas</button>
         <button className={vista === 'destinos' ? 'tab activo' : 'tab'} onClick={() => setVista('destinos')}>Destinos</button>
         <button className={vista === 'auditoria' ? 'tab activo' : 'tab'} onClick={() => setVista('auditoria')}>Auditoría</button>
         <span className="espacio" />
         <button className="secundario" onClick={salir}>Cerrar sesión</button>
       </div>
+      {vista === 'resumen' && <Resumen token={token} onExpira={salir} />}
       {vista === 'reservas' && <Reservas token={token} onExpira={salir} />}
       {vista === 'destinos' && <Destinos token={token} onExpira={salir} />}
       {vista === 'auditoria' && <Auditoria token={token} onExpira={salir} />}
@@ -147,7 +151,7 @@ function Destinos({ token, onExpira }) {
           <tbody>
             {datos.map((d) => (
               <tr key={d.id}>
-                <td>{d.nombre}<br /><small>{d.descripcion}</small></td><td>{dinero(d.precioBase)}</td><td>{d.capacidadDiaria}</td>
+                <td><div className="celda-destino"><FotoDestino nombre={d.nombre} className="miniatura" /><div>{d.nombre}<br /><small>{d.descripcion}</small></div></div></td><td>{dinero(d.precioBase)}</td><td>{d.capacidadDiaria}</td>
                 <td><span className={`etiqueta ${d.activo ? 'Aprobada' : 'Cancelada'}`}>{d.activo ? 'Activo' : 'Inactivo'}</span></td>
                 <td className="acciones">
                   <button className="secundario" onClick={() => setForm({ id: d.id, nombre: d.nombre, descripcion: d.descripcion, precioBase: d.precioBase, capacidadDiaria: d.capacidadDiaria })}>Editar</button>
