@@ -1,0 +1,23 @@
+# Blueprint de Render para ViajaYa (un solo servicio: API + frontend compilado).
+# Uso: Render Dashboard > New > Blueprint > seleccionar este repositorio.
+services:
+  - type: web
+    name: viajaya
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: cd frontend && npm install --include=dev && npm run build && cd ../backend && npm install
+    startCommand: node backend/src/server.js
+    healthCheckPath: /api/health
+    autoDeployTrigger: commit
+    envVars:
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 8h

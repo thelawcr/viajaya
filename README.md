@@ -45,11 +45,19 @@ Administrador de demostración: `admin@viajaya.test` / `Admin123!` (configurable
 5. Complete `backend/.env`: `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `SUPABASE_ANON_KEY` y un `JWT_SECRET` largo y aleatorio.
 6. `npm start` en `backend/`. La clave `SUPABASE_SERVICE_KEY` **nunca** debe ir en el frontend ni en el repositorio.
 
+## Despliegue en la nube (Render + Supabase)
+
+El repositorio incluye `render.yaml` (Blueprint de Render, un solo servicio con API y frontend) y `.node-version`. En producción el servidor valida la configuración: sin `SUPABASE_URL`/`SUPABASE_SERVICE_KEY` o con un `JWT_SECRET` de menos de 32 caracteres no arranca. La guía completa está en `docs/Plan_de_Despliegue_ViajaYa.docx`.
+
+## Pruebas de aceptación (QA)
+
+`docs/Plan_y_Casos_de_Prueba_ViajaYa.docx` documenta 20 casos funcionales; `docs/evidencias_qa/ejecutar_qa.js` los ejecuta con Playwright y guarda capturas y `resultados.json`.
+
 ## Pruebas unitarias
 
 ```bash
 cd backend
-npm test                # 83 pruebas
+npm test                # 87 pruebas
 npm run test:coverage   # con informe de cobertura
 ```
 

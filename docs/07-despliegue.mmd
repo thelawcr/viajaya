@@ -1,0 +1,23 @@
+flowchart TB
+    DEV["<b>Equipo de desarrollo</b><br/>git push a la rama main"]
+    GH["<b>GitHub</b><br/>repositorio viajaya"]
+    subgraph RND ["Render · servicio web (plan Free)"]
+        direction TB
+        BLD["<b>Build</b><br/>npm install --include=dev · vite build<br/>npm install (backend)"]
+        RUN["<b>Node.js 22 · Express</b><br/>API /api + frontend compilado<br/>HTTPS y certificado automáticos"]
+        BLD --> RUN
+    end
+    subgraph SB ["Supabase · proyecto (plan Free)"]
+        direction TB
+        PG[("<b>PostgreSQL</b><br/>destinos · reservas · auditoria<br/>RLS y funciones atómicas")]
+        AUTH["<b>Auth</b><br/>usuario con rol admin"]
+    end
+    USR["<b>Turista / administrador</b><br/>navegador web"]
+    DYN["<b>Dynu</b> (opcional)<br/>subdominio gratuito"]
+
+    DEV --> GH
+    GH -- "webhook: despliegue automático" --> BLD
+    USR -- "HTTPS" --> RUN
+    DYN -. "apunta al servicio" .-> RUN
+    RUN -- "service key · HTTPS" --> PG
+    RUN -- "login del administrador" --> AUTH

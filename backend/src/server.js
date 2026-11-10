@@ -6,6 +6,7 @@ const { crearReservaService } = require('./services/reservaService');
 const { crearAdminService } = require('./services/adminService');
 const { crearAuthService, credencialesDemo, credencialesSupabase } = require('./services/authService');
 const { MemoryRepository } = require('./repositories/memoryRepository');
+const { validarEntorno } = require('./config');
 
 function datosDemo() {
   return {
@@ -19,8 +20,12 @@ function datosDemo() {
 }
 
 function main() {
+  const { usaSupabase, errores } = validarEntorno(process.env);
+  if (errores.length) {
+    errores.forEach((e) => console.error(`CONFIGURACIÓN INVÁLIDA: ${e}`));
+    process.exit(1);
+  }
   const jwtSecret = process.env.JWT_SECRET || 'secreto-solo-para-desarrollo';
-  const usaSupabase = Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_KEY);
   let repo;
   let verificar;
 
