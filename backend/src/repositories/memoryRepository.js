@@ -117,7 +117,7 @@ class MemoryRepository {
   async listReservas() {
     return clonar(
       [...this.reservas]
-        .sort((a, b) => (a.fechaViaje < b.fechaViaje ? 1 : -1))
+        .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1)) // más recientes primero
         .map((r) => ({ ...r, destinoNombre: this.destinos.find((d) => d.id === r.destinoId)?.nombre }))
     );
   }

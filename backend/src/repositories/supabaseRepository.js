@@ -162,7 +162,7 @@ class SupabaseRepository {
       await this.db
         .from('reservas')
         .select('*, destinos(nombre)')
-        .order('fecha_viaje', { ascending: false })
+        .order('created_at', { ascending: false }) // más recientes primero
     );
     return data.map(aReserva);
   }
