@@ -1,0 +1,42 @@
+flowchart TB
+    UI["<b>Frontend React (Vite)</b><br/>Reservar · Mi reserva · Administración"]
+    API["<b>app.js</b> (Express)<br/>Rutas REST /api · middleware JWT<br/>manejo de errores · sirve frontend/dist"]
+    RS["<b>reservaService</b><br/>RF-01 a RF-06"]
+    AS["<b>adminService</b><br/>RF-07 a RF-09"]
+    AU["<b>authService</b><br/>login y JWT"]
+    DOM["<b>Dominio</b><br/>rules.js (RN-01 a RN-04)<br/>validators.js · errors.js"]
+    AUD["<b>auditoria.js</b><br/>trazabilidad"]
+    IR["<b>Contrato de repositorio</b><br/>mismo conjunto de métodos"]
+    SR["<b>supabaseRepository</b><br/>producción"]
+    MR["<b>memoryRepository</b><br/>pruebas y demostración"]
+    PG[("<b>PostgreSQL (Supabase)</b><br/>destinos · reservas · auditoria<br/>RLS y funciones atómicas")]
+    SA["<b>Supabase Auth</b><br/>usuarios con rol admin"]
+
+    UI -- "HTTPS · JSON" --> API
+    API --> RS
+    API --> AS
+    API --> AU
+    RS --> DOM
+    AS --> DOM
+    RS --> AUD
+    AS --> AUD
+    RS --> IR
+    AS --> IR
+    AUD --> IR
+    IR --> SR
+    IR -.-> MR
+    SR -- "service key" --> PG
+    AU -- "signInWithPassword" --> SA
+
+    classDef cliente fill:#dbeafe,stroke:#1e40af,color:#111
+    classDef api fill:#e0e7ff,stroke:#3730a3,color:#111
+    classDef servicio fill:#dcfce7,stroke:#166534,color:#111
+    classDef dominio fill:#fef9c3,stroke:#854d0e,color:#111
+    classDef datos fill:#fce7f3,stroke:#9d174d,color:#111
+    classDef externo fill:#e5e7eb,stroke:#374151,color:#111
+    class UI cliente
+    class API api
+    class RS,AS,AU,AUD servicio
+    class DOM dominio
+    class IR,SR,MR datos
+    class PG,SA externo

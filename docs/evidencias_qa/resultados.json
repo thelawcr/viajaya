@@ -1,0 +1,140 @@
+{
+  "ejecutado": "2026-11-10T03:22:00.070Z",
+  "base": "http://localhost:3100",
+  "resultados": [
+    {
+      "id": "TC-CU01-01",
+      "estado": "Aprobado",
+      "obtenido": "La pantalla mostró Subtotal $360.00, IVA (13%) $46.80, Total $406.80 y “Hay cupo disponible (12 lugares libres ese día)”. Total de reservas en BD sin cambios.",
+      "evidencia": "TC-CU01-01.png"
+    },
+    {
+      "id": "TC-CU01-02",
+      "estado": "Aprobado",
+      "obtenido": "Mensaje: “No hay cupo suficiente: solo quedan 12 lugares para esa fecha. Pruebe otra fecha o menos personas.”. No se habilitó el formulario de pago y la BD no cambió.",
+      "evidencia": "TC-CU01-02.png"
+    },
+    {
+      "id": "TC-CU01-03",
+      "estado": "Aprobado",
+      "obtenido": "Servidor: HTTP 400 {\"error\":{\"codigo\":\"VALIDACION\",\"mensaje\":\"La fecha del viaje no puede estar en el pasado\"}}. Formulario: el campo fecha impide elegir días anteriores a hoy (min=2026-11-09).",
+      "evidencia": "API",
+      "http": "GET /api/disponibilidad?destinoId=…&fecha=2026-11-08&personas=2\n→ 400\n{\n  \"error\": {\n    \"codigo\": \"VALIDACION\",\n    \"mensaje\": \"La fecha del viaje no puede estar en el pasado\"\n  }\n}"
+    },
+    {
+      "id": "TC-CU02-01",
+      "estado": "Aprobado",
+      "obtenido": "Pantalla: “Reserva registrada”, código VY-545RP343, total $271.20, pago Aprobado (****4242). BD: estadoReserva=Pendiente, estadoPago=Aprobado, montoTotal=271.2, tarjetaUltimos4=4242, sin número completo. Cupo del día: 12 → 10.",
+      "evidencia": "TC-CU02-01.png",
+      "codigo": "VY-545RP343"
+    },
+    {
+      "id": "TC-CU02-02",
+      "estado": "Aprobado",
+      "obtenido": "Pantalla: “Reserva registrada con pago rechazado” con código VY-C5H5LB8V y aviso de revisión. BD: estadoPago=Rechazado, estadoReserva=Pendiente. El cupo del día pasó de 10 a 8 (sigue ocupado).",
+      "evidencia": "TC-CU02-02.png",
+      "codigo": "VY-C5H5LB8V"
+    },
+    {
+      "id": "TC-CU02-03",
+      "estado": "Aprobado",
+      "obtenido": "Alerta roja: “El teléfono debe tener entre 7 y 15 dígitos”. La BD conservó el mismo número de reservas (2) y el cupo del día quedó intacto (12).",
+      "evidencia": "TC-CU02-03.png"
+    },
+    {
+      "id": "TC-CU02-04",
+      "estado": "Aprobado",
+      "obtenido": "Fecha con 12/12 personas. UI: “No hay cupo suficiente: solo quedan 0 lugares para esa fecha. Pruebe otra fecha o menos personas.”. API directa: HTTP 409 CUPO_EXCEDIDO. La BD no registró la reserva adicional (3 reservas antes y después).",
+      "evidencia": "TC-CU02-04.png",
+      "http": "POST /api/reservas (1 persona, fecha llena)\n→ 409\n{\n  \"error\": {\n    \"codigo\": \"CUPO_EXCEDIDO\",\n    \"mensaje\": \"No hay cupo suficiente para esa fecha: quedan 0 lugares libres\"\n  }\n}"
+    },
+    {
+      "id": "TC-CU03-01",
+      "estado": "Aprobado",
+      "obtenido": "Se mostró “Reserva VY-545RP343” con destino Tortuguero, cliente Laura Jiménez Mora, total $271.20 y estados Pendiente / Aprobado, además de las opciones cambiar fecha y cancelar.",
+      "evidencia": "TC-CU03-01.png"
+    },
+    {
+      "id": "TC-CU03-02",
+      "estado": "Aprobado",
+      "obtenido": "Alerta: “No se encontró una reserva activa con ese código y correo”. No se reveló ningún dato; el mensaje es el mismo que para un código inexistente.",
+      "evidencia": "TC-CU03-02.png"
+    },
+    {
+      "id": "TC-CU03-03",
+      "estado": "Aprobado",
+      "obtenido": "Mensaje: “La fecha de su reserva fue actualizada.” BD: fechaViaje 2026-11-23 → 2026-11-29. Cupo de 2026-11-23: 10 → 12; cupo de 2026-11-29: 12 → 10.",
+      "evidencia": "TC-CU03-03.png",
+      "codigo": "VY-X7VGJAFA"
+    },
+    {
+      "id": "TC-CU03-04",
+      "estado": "Aprobado",
+      "obtenido": "Reserva para 2026-11-10 (menos de 48 h). Alerta: “Solo se puede cambiar la fecha o cancelar si faltan más de 48 horas para el viaje”. BD: estadoReserva=Pendiente (sigue activa). Cambiar la fecha por API: HTTP 409 FUERA_DE_VENTANA.",
+      "evidencia": "TC-CU03-04.png",
+      "codigo": "VY-GA6QDXN8"
+    },
+    {
+      "id": "TC-CU03-05",
+      "estado": "Aprobado",
+      "obtenido": "Mensaje: “Su reserva fue cancelada y el cupo quedó liberado.” BD: estadoReserva=Cancelada. El cupo de 2026-11-24 pasó de 9 a 12.",
+      "evidencia": "TC-CU03-05.png",
+      "codigo": "VY-ZCU4UL5J"
+    },
+    {
+      "id": "TC-CU03-06",
+      "estado": "Aprobado",
+      "obtenido": "Fecha destino 2026-11-26 con 12/12. Alerta: “No hay cupo suficiente para esa fecha: quedan 0 lugares libres”. BD: fechaViaje se mantiene en 2026-11-25.",
+      "evidencia": "TC-CU03-06.png",
+      "codigo": "VY-4NP2SXBK"
+    },
+    {
+      "id": "TC-CU06-01",
+      "estado": "Aprobado",
+      "obtenido": "Alerta: “Correo o contraseña incorrectos”. No se guardó token de sesión y el panel de administración no se mostró.",
+      "evidencia": "TC-CU06-01.png"
+    },
+    {
+      "id": "TC-CU06-02",
+      "estado": "Aprobado",
+      "obtenido": "GET /api/admin/reservas sin token → HTTP 401; con token falso → HTTP 401. Ninguna respuesta incluyó datos de reservas.",
+      "evidencia": "API",
+      "http": "GET /api/admin/reservas (sin Authorization)\n→ 401\n{\n  \"error\": {\n    \"codigo\": \"NO_AUTORIZADO\",\n    \"mensaje\": \"Falta el token de autenticación\"\n  }\n}\n\nGET /api/admin/reservas (Authorization: Bearer token.falso.123)\n→ 401\n{\n  \"error\": {\n    \"codigo\": \"NO_AUTORIZADO\",\n    \"mensaje\": \"Credenciales inválidas o sesión expirada\"\n  }\n}"
+    },
+    {
+      "id": "TC-CU04-01",
+      "estado": "Aprobado",
+      "obtenido": "El destino “Snorkel en Cahuita” (USD 70, capacidad 10) apareció en la tabla de destinos activos y en GET /api/destinos (listado público).",
+      "evidencia": "TC-CU04-01.png"
+    },
+    {
+      "id": "TC-CU04-02",
+      "estado": "Aprobado",
+      "obtenido": "Precio 0 → HTTP 400 “El campo \"precio base\" debe ser un número mayor que cero”. Capacidad 0 → HTTP 400 “El campo \"capacidad máxima diaria\" debe ser un entero entre 1 y 10000”. El número de destinos no cambió (4).",
+      "evidencia": "API",
+      "http": "POST /api/admin/destinos {precioBase: 0, capacidadDiaria: 10}\n→ 400\n{\n  \"error\": {\n    \"codigo\": \"VALIDACION\",\n    \"mensaje\": \"El campo \\\"precio base\\\" debe ser un número mayor que cero\"\n  }\n}\n\nPOST /api/admin/destinos {precioBase: 50, capacidadDiaria: 0}\n→ 400\n{\n  \"error\": {\n    \"codigo\": \"VALIDACION\",\n    \"mensaje\": \"El campo \\\"capacidad máxima diaria\\\" debe ser un entero entre 1 y 10000\"\n  }\n}"
+    },
+    {
+      "id": "TC-CU05-01",
+      "estado": "Aprobado",
+      "obtenido": "Pago Rechazado → Aprobado y reserva Pendiente → Aprobada. BD: estadoPago=Aprobado, estadoReserva=Aprobada. Auditoría: RESERVA_APROBADA y PAGO_MODIFICADO quedaron registradas con admin@viajaya.test como actor.",
+      "evidencia": "TC-CU05-01.png",
+      "codigo": "VY-4N2S9FJE",
+      "evidencia2": "TC-CU05-01-auditoria.png"
+    },
+    {
+      "id": "TC-CU05-02",
+      "estado": "Aprobado",
+      "obtenido": "El botón cambió a “Reactivar”; tras presionarlo la reserva quedó Aprobada. El cupo de 2026-11-28 pasó de 12 a 9 y la auditoría registró RESERVA_REACTIVADA.",
+      "evidencia": "TC-CU05-02.png",
+      "codigo": "VY-Y9V34FPG"
+    },
+    {
+      "id": "TC-CU05-03",
+      "estado": "Aprobado",
+      "obtenido": "Fecha 2026-11-30 con 12/12 ocupadas por otros clientes. Alerta: “No hay cupo suficiente para esa fecha: quedan 0 lugares libres”. BD: la reserva sigue Cancelada.",
+      "evidencia": "TC-CU05-03.png",
+      "codigo": "VY-7MBLUZX3"
+    }
+  ]
+}

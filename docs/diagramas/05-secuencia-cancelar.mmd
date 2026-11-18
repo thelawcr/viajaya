@@ -1,0 +1,32 @@
+sequenceDiagram
+    autonumber
+    actor T as Turista
+    participant UI as Frontend React
+    participant API as API Express
+    participant RS as reservaService<br/>(usa rules.js)
+    participant R as Repositorio
+    participant BD as PostgreSQL
+
+    T->>UI: pulsa Cancelar reserva y confirma
+    UI->>API: POST /api/reservas/:codigo/cancelar
+    API->>RS: cancelarReserva()
+    RS->>R: getReservaPorCodigo()
+    R->>BD: consulta
+    BD-->>R: reserva
+    RS->>RS: esReservaActiva() y comparar correo
+    alt reserva no encontrada
+        RS-->>UI: 404 NO_ENCONTRADO
+    else reserva activa
+        RS->>RS: validarVentana()<br/>[RN-02]
+        alt faltan 48 horas o menos
+            RS-->>UI: 409 FUERA_DE_VENTANA
+            UI-->>T: no se puede cancelar
+        else faltan más de 48 horas
+            RS->>R: updateReserva(estadoReserva = Cancelada)
+            R->>BD: UPDATE reservas
+            Note over R,BD: al dejar de estar activa, la reserva libera su cupo (RF-06, RN-01)
+            RS->>R: registrarAuditoria()<br/>RESERVA_CANCELADA_CLIENTE
+            RS-->>UI: 200 reserva Cancelada
+            UI-->>T: cupo liberado
+        end
+    end

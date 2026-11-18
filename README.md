@@ -1,6 +1,8 @@
 # ViajaYa — Sistema de Reservas Turísticas Autoservicio
 
-Proyecto Integrador RUP (IF6100) · Entregable 3: Fase de Construcción.
+Proyecto Integrador RUP (IF6100) · Entregables 3 (Construcción) y 4 (Transición).
+
+Aplicación desplegada: https://viajaya-6yz9.onrender.com
 
 Plataforma web para consultar destinos, cotizar, reservar con pago simulado y administrar destinos y reservas.
 
@@ -22,8 +24,8 @@ viajaya/
 │   ├── src/repositories/   memoria (pruebas/demo) y Supabase (producción)
 │   └── tests/              suite de pruebas unitarias automatizadas
 ├── frontend/           aplicación React
-├── database/           schema.sql (tablas, RLS, funciones) y seed.sql
-└── docs/               API Docs, Diagramas, Trazabilidad (.docx) y docs/diagramas (PNG + fuentes .mmd)
+├── database/           schema.sql (tablas, RLS, funciones), migraciones y datos de carga (seed_caribe_sur.sql, seed_reservas_prueba.sql)
+└── docs/               API Docs, Diagramas, Trazabilidad, Plan de Despliegue y Plan y Casos de Prueba (.docx), docs/diagramas (PNG + fuentes .mmd) y docs/evidencias_qa
 ```
 
 ## Ejecución local rápida (modo demostración, sin Supabase)
@@ -39,7 +41,7 @@ Administrador de demostración: `admin@viajaya.test` / `Admin123!` (configurable
 ## Ejecución con persistencia (Supabase)
 
 1. Cree un proyecto en https://supabase.com.
-2. En **SQL Editor** ejecute `database/schema.sql` y, opcionalmente, `database/seed.sql`.
+2. En **SQL Editor** ejecute `database/schema.sql` y, opcionalmente, `database/seed_caribe_sur.sql` (13 destinos del Caribe Sur) y `database/seed_reservas_prueba.sql` (reservas ficticias para la demostración).
 3. Si ya había ejecutado una versión anterior de `schema.sql`, ejecute también, en este orden, `database/migracion_auditoria.sql` (tabla de auditoría) y `database/migracion_e3_final.sql` (teléfono del cliente y reactivación de reservas).
 4. En **Authentication > Users** cree el usuario administrador y ejecute el `update auth.users ...` indicado al final de `schema.sql` para asignarle el rol `admin`.
 5. Complete `backend/.env`: `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `SUPABASE_ANON_KEY` y un `JWT_SECRET` largo y aleatorio.
@@ -68,15 +70,17 @@ npm run test:coverage   # con informe de cobertura
 | API HTTP, seguridad, RF-07 a RF-09 | `tests/api-admin.test.js` | 13 |
 | Auditoría (trazabilidad) | `tests/auditoria.test.js` | 12 |
 | Casos de uso del SRS (CU-01, CU-02, CU-05, RF-10) | `tests/casos-de-uso.test.js` | 15 |
+| Validación de configuración de producción (E4) | `tests/config.test.js` | 4 |
+| **Total** | 6 archivos | **87** |
 
 ## Despliegue en Render (un solo servicio)
 
-- **Build Command:** `cd frontend && npm install && npm run build && cd ../backend && npm install`
+- **Build Command:** `cd frontend && npm install --include=dev && npm run build && cd ../backend && npm install`
 - **Start Command:** `node backend/src/server.js`
 - **Variables de entorno:** `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `SUPABASE_ANON_KEY`, `JWT_SECRET`, `JWT_EXPIRES_IN`.
 
 El backend sirve el frontend compilado (`frontend/dist`), por lo que no se necesita CORS ni un segundo servicio.
-La guía completa de despliegue corresponde al Entregable 4.
+La guía completa está en `docs/Plan_de_Despliegue_ViajaYa.docx` (Entregable 4).
 
 ## Decisiones de diseño relevantes
 
@@ -95,3 +99,5 @@ Cada acción del administrador y de los clientes (crear, aprobar, cancelar, elim
 - `docs/API_Docs_ViajaYa.docx`: endpoints, reglas de negocio, errores y pruebas.
 - `docs/Trazabilidad_ViajaYa.docx`: matriz entre SRS/SAD (E2) y la aplicación, y cambios respecto al E2.
 - `docs/Diagramas_ViajaYa.docx`: DER, componentes y secuencia (fuentes editables en `docs/diagramas/*.mmd`).
+- `docs/Plan_de_Despliegue_ViajaYa.docx`: instalación en GitHub, Supabase y Render, migración y pruebas de humo (E4).
+- `docs/Plan_y_Casos_de_Prueba_ViajaYa.docx`: plan de pruebas y 20 casos funcionales con evidencia en `docs/evidencias_qa` (E4).

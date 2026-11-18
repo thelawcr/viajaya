@@ -1,0 +1,37 @@
+sequenceDiagram
+    autonumber
+    actor T as Turista
+    participant UI as Frontend React
+    participant API as API Express
+    participant RS as reservaService<br/>(usa rules.js)
+    participant R as Repositorio
+    participant BD as PostgreSQL
+
+    T->>UI: indica código, correo y nueva fecha
+    UI->>API: PATCH /api/reservas/:codigo/fecha
+    API->>RS: modificarFecha()
+    RS->>R: getReservaPorCodigo()
+    R->>BD: consulta
+    BD-->>R: reserva
+    RS->>RS: esReservaActiva() y comparar correo (RF-04)
+    alt no existe, correo distinto, cancelada o fecha pasada
+        RS-->>UI: 404 NO_ENCONTRADO
+    else reserva activa
+        RS->>RS: validarVentana()<br/>[RN-02]
+        alt faltan 48 horas o menos
+            RS-->>UI: 409 FUERA_DE_VENTANA
+        else faltan más de 48 horas
+            RS->>R: personasReservadas(nueva fecha, excluye esta reserva)
+            RS->>RS: validarCupo() [RN-01]
+            alt la nueva fecha no tiene cupo
+                RS-->>UI: 409 CUPO_EXCEDIDO (conserva la fecha original)
+            else hay cupo
+                RS->>R: moverReservaAtomica()
+                R->>BD: rpc mover_reserva_atomica (bloquea y revalida)
+                BD-->>R: reserva actualizada
+                RS->>R: registrarAuditoria()<br/>RESERVA_FECHA_CAMBIADA
+                RS-->>UI: 200 con la nueva fecha
+                UI-->>T: confirma el cambio
+            end
+        end
+    end

@@ -1,0 +1,38 @@
+sequenceDiagram
+    autonumber
+    actor T as Turista
+    participant UI as Frontend React
+    participant API as API Express
+    participant RS as reservaService<br/>(usa rules.js)
+    participant R as Repositorio
+    participant BD as PostgreSQL
+
+    T->>UI: elige destino, fecha y personas
+    UI->>API: GET /api/disponibilidad
+    API->>RS: buscarDisponibilidad()
+    RS->>R: getDestino() y personasReservadas()
+    R->>BD: consulta
+    BD-->>R: destino y ocupación
+    RS->>RS: calcularCotizacion()<br/>[RN-03]
+    RS-->>UI: cupo disponible y cotización (RF-01, RF-02)
+
+    T->>UI: ingresa nombre, correo y tarjeta simulada
+    UI->>API: POST /api/reservas
+    API->>RS: crearReserva()
+    RS->>RS: calcularCotizacion()<br/>[RN-03]
+    RS->>RS: simularPago() [RN-04]
+    RS->>R: personasReservadas()
+    RS->>RS: validarCupo() [RN-01]
+    alt supera la capacidad diaria
+        RS-->>API: error CUPO_EXCEDIDO
+        API-->>UI: 409 sin cupo
+        UI-->>T: mensaje de cupo agotado
+    else hay cupo
+        RS->>R: crearReservaAtomica()
+        R->>BD: rpc crear_reserva_atomica (bloquea destino, revalida cupo e inserta)
+        BD-->>R: reserva creada
+        RS->>R: registrarAuditoria()<br/>RESERVA_CREADA
+        RS-->>API: reserva con código VY-XXXXXXXX
+        API-->>UI: 201 Created
+        UI-->>T: muestra código y estado de pago (Aprobado si la tarjeta termina en par)
+    end

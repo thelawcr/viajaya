@@ -1,0 +1,35 @@
+sequenceDiagram
+    autonumber
+    actor A as Administrador
+    participant UI as Frontend React
+    participant API as API Express (middleware JWT)
+    participant AU as authService
+    participant AS as adminService
+    participant SB as Supabase (Auth y PostgreSQL)
+
+    A->>UI: ingresa correo y contraseña
+    UI->>API: POST /api/admin/login
+    API->>AU: login()
+    AU->>SB: signInWithPassword()
+    SB-->>AU: usuario con app_metadata.role = admin
+    AU-->>UI: JWT firmado (8 h)
+
+    A->>UI: cambia el estado de pago de una reserva
+    UI->>API: PATCH /api/admin/reservas/:id/pago (Bearer JWT)
+    API->>AU: verificarToken()
+    alt token ausente, inválido o sin rol admin
+        API-->>UI: 401 NO_AUTORIZADO
+    else token válido (actor = correo del admin)
+        API->>AS: cambiarEstadoPago(id, estado, actor) [RF-09]
+        AS->>SB: SELECT reserva
+        SB-->>AS: reserva
+        AS->>SB: UPDATE reservas (estado_pago)
+        AS->>SB: INSERT auditoria (PAGO_MODIFICADO, actor, de y a)
+        AS-->>UI: 200 reserva actualizada
+    end
+
+    A->>UI: abre la pestaña Auditoría
+    UI->>API: GET /api/admin/auditoria (Bearer JWT)
+    API->>AS: listarAuditoria()
+    AS->>SB: SELECT ordenado por fecha
+    AS-->>UI: quién, qué y cuándo (más reciente primero)
